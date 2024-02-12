@@ -6,12 +6,6 @@ from flask_mail import Mail, Message
 from concurrent.futures import ThreadPoolExecutor
 import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
-import pandas as pd
-import plotly as plt
-import plotly.express as px
-import dash
-from tabulate import tabulate
-from django.shortcuts import render
 
 
 app = Flask(__name__)
@@ -28,11 +22,7 @@ notification_collection = db['notification_status']
 def index():
     return render_template('page.html')
 
-def username_exist(username):
-    existing_admin = admin_collection.find_one({"admin_username": username})
-    return existing_admin is not None
-
-
+############################################################################################
 @app.route('/add_admin', methods=['POST'])
 def add_admin():
     app.logger.info(request.form)
@@ -84,6 +74,11 @@ def add_admin():
 
     return render_template('page.html', admin_message='Admin data received successfully')
 
+def username_exist(username):
+    existing_admin = admin_collection.find_one({"admin_username": username})
+    return existing_admin is not None
+
+############################################################################################
 @app.route('/add_review', methods=['POST'])
 def add_review():
     if request.method == 'POST':
@@ -147,7 +142,8 @@ def add_review():
         add_review_array(admin_id, business_id)
         
         return render_template('page.html', review_message='Review data received successfully')
-    
+
+
 def add_review_array(admin_id, business_id):
     
     app.logger.info("inside add review array")
@@ -174,8 +170,8 @@ def add_review_array(admin_id, business_id):
             notification_collection.update_one({'admin_id': admin_id}, {'$push': {'new_review_array': last_review}})
 
             notification_collection.update_one({'admin_id': admin_id}, {"$set": {"executed": "0"}})
-
-
+    
+############################################################################################
 @app.route('/check_admin', methods=['POST'])
 def check_admin():
     username = str(request.form['input_username'])
@@ -190,7 +186,7 @@ def check_admin():
     else:
         return username + password + " found"
     
-
+############################################################################################
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = 'eunicelimuria@gmail.com'  
@@ -206,15 +202,7 @@ def send_mail():
     mail.send(message= message)
     return render_template('page.html', result_message='Email sent!')
 
-def get_admin_id(admin_username):
-    admin_id = admin_collection.find_one({"admin_username": admin_username})['admin_id']
-    return admin_id
-
-def admin_id_exist(admin_username):
-    admin_id = get_admin_id(admin_username)
-    existing_admin = notification_collection.find_one({"admin_id": admin_id})
-    return existing_admin is not None
-
+############################################################################################
 @app.route('/start_stop_notification', methods=['POST'])
 def start_stop_notification():
     admin_username = str(request.form['admin_username'])
@@ -237,6 +225,14 @@ def start_stop_notification():
             input_admin(admin_username, admin_password, status)
             return render_template('page.html', notification_message='Review checking stopped!')
         
+def admin_id_exist(admin_username):
+    admin_id = get_admin_id(admin_username)
+    existing_admin = notification_collection.find_one({"admin_id": admin_id})
+    return existing_admin is not None
+
+def get_admin_id(admin_username):
+    admin_id = admin_collection.find_one({"admin_username": admin_username})['admin_id']
+    return admin_id
 
 def input_admin(admin_username, admin_password, status):
     admin_id = get_admin_id(admin_username)
@@ -268,22 +264,11 @@ def input_admin(admin_username, admin_password, status):
         error_message = str(err)  
         return error_message
     
-
-
+############################################################################################
 def automatic_check_reviews():
     app.logger.info('--- Automatic check reviews executed ---')
     for x in notification_collection.find({"status": '1'}):
         check_review_array(admin_collection.find_one({"admin_id": x['admin_id']}))
-
-
-scheduler = BackgroundScheduler()        
-
-scheduler.add_job(
-    automatic_check_reviews, 
-    'interval', 
-    minutes=1)
-scheduler.start()
-atexit.register(lambda: scheduler.shutdown())
     
 def check_review_array(admin_id):
     app.logger.info("check_review_array started")
@@ -395,6 +380,18 @@ def send_email(admin_username, email_body):
         mail.send(message=msg)
         app.logger.info('--- Email sent! ---')
 
+scheduler = BackgroundScheduler()        
+
+scheduler.add_job(
+    automatic_check_reviews, 
+    'interval', 
+    minutes=1)
+
+scheduler.start()
+
+atexit.register(lambda: scheduler.shutdown())
+
+############################################################################################
 @app.route('/show_reports', methods=['POST'])        
 def show_reports():
     admin_username = str(request.form['report_admin_username'])
@@ -440,6 +437,3 @@ def show_reports():
 
 if __name__ == '__main__':
     app.run(use_reloader=False, debug=True)
-
-
-
