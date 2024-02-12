@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Yelp Review{% endblock %}
+
+{% block header %}
+    Add Admin and Review
+{% endblock %}
+
+{% block content %}
+    <form action="/"></form>
+
+    <form action="/add_admin" method="post">
+        <h2>Add Admin</h2>
+        <label for="admin_business_name">Business Name:</label>
+        <input type="text" id="admin_business_name" name="admin_business_name"><br><br>
+
+        <label for="admin_business_address">Business Address:</label>
+        <input type="text" id="admin_business_address" name="admin_business_address"><br><br>
+
+        <label for="admin_business_city">Business City:</label>
+        <input type="text" id="admin_business_city" name="admin_business_city"><br><br>
+
+        <label for="admin_admin_name">Admin Name:</label>
+        <input type="text" id="admin_admin_name" name="admin_admin_name"><br><br>
+
+        <label for="admin_admin_username">Admin Username:</label>
+        <input type="text" id="admin_admin_username" name="admin_admin_username"><br><br>
+
+        <label for="admin_admin_email">Admin Email:</label>
+        <input type="text" id="admin_admin_email" name="admin_admin_email"><br><br>
+
+        <label for="admin_admin_password">Admin Password:</label>
+        <input type="password" id="admin_admin_password" name="admin_admin_password"><br><br>
+
+        <label for="admin_admin_password_confirm">Confirm Admin Password:</label>
+        <input type="password" id="admin_admin_password_confirm" name="admin_admin_password_confirm"><br><br>
+
+        <label for="admin_threshold_percentage">Threshold Percentage:</label>
+        <input type="number" id="admin_threshold_percentage" name="admin_threshold_percentage"><br><br>
+
+        <label for="admin_last_n_reviews">Last N Reviews:</label>
+        <input type="number" id="admin_last_n_reviews" name="admin_last_n_reviews"><br><br>
+
+        <input type="submit" value="Add Admin">
+
+        <div id="admin-message-container">
+            <p id="admin-message">{{ admin_message }}</p>
+        </div>
+    </form>
+
+    <form action="/add_review", method="post"> 
+        <h2>Add Review</h2>
+        <label for="user_name">User Name:</label>
+        <input type="text" id="user_name" name="user_name"><br><br>
+
+        <label for="business_name">Business Name:</label>
+        <input type="text" id="business_name" name="business_name"><br><br>
+
+        <label for="business_address">Business Address:</label>
+        <input type="text" id="business_address" name="business_address"><br><br>
+
+        <label for="business_city">Business City:</label>
+        <input type="text" id="business_city" name="business_city"><br><br>
+
+        <label for="stars">Stars:</label>
+        <input type="number" id="stars" name="stars"><br><br>
+
+        <label for="useful">Useful:</label>
+        <input type="number" id="useful" name="useful"><br><br>
+
+        <label for="funny">Funny:</label>
+        <input type="number" id="funny" name="funny"><br><br>
+
+        <label for="cool">Cool:</label>
+        <input type="number" id="cool" name="cool"><br><br>
+
+        <label for="text">Review:</label>
+        <input type="text" id="text" name="text"><br><br>
+
+        <input type="submit" value="Add Review">
+
+        <div id="review-message-container">
+            <p id="review-message">{{ review_message }}</p>
+        </div>
+    </form>
+
+    <form action="/check_admin", method="post">
+        <h2>Get Admin</h2>
+        <label for="input_username">User Name:</label>
+        <input type="text" id="input_username" name="input_username"><br><br>
+
+        <label for="input_password">Password:</label>
+        <input type="password" id="input_password" name="input_password"><br><br>
+        
+        <input type="submit" value="Get Admin">
+    </form>
+
+    <form action="/send_mail", method="post">
+        <h2>Send Mail</h2>
+        <label for ="recipient" >Recipient:</label>
+        <input type="text" id="recipient" name="recipient"><br><br>
+
+        <input type="submit" value="Send Mail">
+        <p>{{ result_message }}</p>
+    </form>
+
+    <form action="/start_stop_notification", method="post">
+        <h2>Get Notification</h2>
+        <label for="admin_username">User Name:</label>
+        <input type="text" id="admin_username" name="admin_username"><br><br>
+
+        <label for="admin_password">Password:</label>
+        <input type="password" id="admin_password" name="admin_password"><br><br>
+        
+        <input type="submit" value="Start Notification", name="Start">
+        <input type="submit" value="Stop Notification", name="Stop">
+    </form>
+
+    <form action = "/show_reports", method="post">
+        <h2>Get Monthly Reports</h2>
+        <label for="report_admin_username">User Name:</label>
+        <input type="text" id="report_admin_username" name="report_admin_username"><br><br>
+
+        <label for="report_admin_password">Password:</label>
+        <input type="password" id="report_admin_password" name="report_admin_password"><br><br>
+
+        <!-- <select name="month" method="GET" action="/">
+            {% for month in months %}
+                <option value="{{month}}" SELECTED>{{month}}</option>"
+            {% endfor %}
+        </select> -->
+        
+        <label for="month">Month:</label>
+        <select name="month" id="month" method="GET" action="/">
+            <option>January</option>
+            <option>February</option>
+            <option>March</option>
+            <option>April</option>
+            <option>May</option>
+            <option>June</option>
+            <option>July</option>
+            <option>August</option>
+            <option>September</option>
+            <option>October</option>
+            <option>November</option>
+            <option>December</option>
+        </select>
+        
+        <!-- <label for="year">Year:</label>
+        <input name="year" id="year" method="GET" action="/"></input> -->
+
+        
+
+        <select name="year" method="GET" action="/">
+            <option><script>document.write( new Date().getFullYear() );</script></option>
+            <option><script>document.write( new Date().getFullYear() -1);</script></option>
+            <option><script>document.write( new Date().getFullYear() -2);</script></option>
+            <option><script>document.write( new Date().getFullYear() -3);</script></option>
+            <option><script>document.write( new Date().getFullYear() -4);</script></option>
+            <option><script>document.write( new Date().getFullYear() -5);</script></option>
+            <option><script>document.write( new Date().getFullYear() -6);</script></option>
+            <option><script>document.write( new Date().getFullYear() -7);</script></option>
+            <option><script>document.write( new Date().getFullYear() -8);</script></option>
+            <option><script>document.write( new Date().getFullYear() -9);</script></option>
+            
+        </select>
+
+        <input type="submit" value="Get Reports">
+
+        <!-- <table border="3">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Review ID</th>
+                    <th>Stars</th>
+                    <th>Cool</th>
+                    <th>Funny</th>
+                    <th>Useful</th>
+                    <th>Text</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                    <tr>
+                        <td>{{ report.date }}</td>
+                        <td>{{ report.review_id }}</td>
+                        <td>{{ report.stars }}</td>
+                        <td>{{ report.cool }}</td>
+                        <td>{{ report.funny }}</td>
+                        <td>{{ report.useful }}</td>
+                        <td>{{ report.text }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table> -->
+    </form>
+
+
+    {% if error_message %}
+        <p>Error: {{ error_message }}</p>
+    {% else %}
+        <p>{{ notification_message }}</p>
+    {% endif %}
+
+    <script>
+        document.getElementById('admin-message').textContent = '{{ admin_message }}';
+        document.getElementById('review-message').textContent = '{{ review_message }}';
+        document.getElementById('notification_message').textContent = '{{ notification_message }}';
+    </script>
+{% endblock %}
+
+<link rel="stylesheet" href="styles.css">

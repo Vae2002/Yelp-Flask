@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Reports</title>
+</head>
+<body>
+    <h2>Monthly Reports</h2>
+    <!-- <form name="month" method="GET" action="/">
+        {% for month in months %}
+            <option value="{{month}}" SELECTED>{{month}}</option>"
+        {% endfor %}
+    </form>
+
+    <form name="year" method="GET" action="/">
+        {% for year in years %}
+            <option value="{{year}}" SELECTED>{{year}}</option>"
+        {% endfor %}
+    </form> -->
+
+    <!-- <select name="month" method="GET" action="/">
+        <option>January</option>
+        <option>February</option>
+        <option>March</option>
+        <option>April</option>
+        <option>May</option>
+        <option>June</option>
+        <option>July</option>
+        <option>August</option>
+        <option>September</option>
+        <option>October</option>
+        <option>November</option>
+        <option>December</option>
+    </select>
+    
+    <input name="year" method="GET" action="/"></input> -->
+
+    <table border="3">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Review ID</th>
+                <th>Stars</th>
+                <th>Cool</th>
+                <th>Funny</th>
+                <th>Useful</th>
+                <th>Text</th>
+                
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+                <tr>
+                    <td>{{ report.date }}</td>
+                    <td>{{ report.review_id }}</td>
+                    <td>{{ report.stars }}</td>
+                    <td>{{ report.cool }}</td>
+                    <td>{{ report.funny }}</td>
+                    <td>{{ report.useful }}</td>
+                    <td>{{ report.text }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

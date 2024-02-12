@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>{% block header %}{% endblock %}</h1>
+    </header>
+    <main>
+        <form id="{% block form_id %}{% endblock %}" action="{% block form_action %}{% endblock %}" method="post">
+            {% block content %}{% endblock %}
+        </form>
+    </main>
+</body>
+</html>
