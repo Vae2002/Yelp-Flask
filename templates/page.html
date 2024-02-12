@@ -123,12 +123,6 @@
 
         <label for="report_admin_password">Password:</label>
         <input type="password" id="report_admin_password" name="report_admin_password"><br><br>
-
-        <!-- <select name="month" method="GET" action="/">
-            {% for month in months %}
-                <option value="{{month}}" SELECTED>{{month}}</option>"
-            {% endfor %}
-        </select> -->
         
         <label for="month">Month:</label>
         <select name="month" id="month" method="GET" action="/">
@@ -146,11 +140,6 @@
             <option>December</option>
         </select>
         
-        <!-- <label for="year">Year:</label>
-        <input name="year" id="year" method="GET" action="/"></input> -->
-
-        
-
         <select name="year" method="GET" action="/">
             <option><script>document.write( new Date().getFullYear() );</script></option>
             <option><script>document.write( new Date().getFullYear() -1);</script></option>
@@ -166,34 +155,6 @@
         </select>
 
         <input type="submit" value="Get Reports">
-
-        <!-- <table border="3">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Review ID</th>
-                    <th>Stars</th>
-                    <th>Cool</th>
-                    <th>Funny</th>
-                    <th>Useful</th>
-                    <th>Text</th>
-                    
-                </tr>
-            </thead>
-            <tbody>
-                {% for report in reports %}
-                    <tr>
-                        <td>{{ report.date }}</td>
-                        <td>{{ report.review_id }}</td>
-                        <td>{{ report.stars }}</td>
-                        <td>{{ report.cool }}</td>
-                        <td>{{ report.funny }}</td>
-                        <td>{{ report.useful }}</td>
-                        <td>{{ report.text }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table> -->
     </form>
 
 

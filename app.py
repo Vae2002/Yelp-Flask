@@ -26,8 +26,6 @@ notification_collection = db['notification_status']
 
 @app.route('/')
 def index():
-    # year = datetime.year
-    # years = [year - i for i in range(10)]
     return render_template('page.html')
 
 def username_exist(username):
@@ -150,13 +148,6 @@ def add_review():
         
         return render_template('page.html', review_message='Review data received successfully')
     
-    #######################
-
-# old review array : ... ... ... ... ... - first, fill in this array, until full, and continue to the new array
-# new review array : ... ... ... ... ... - if full, overwrite old array, new array becomes empty
-
-        
-# bikin document isi nya array review_id nya last_n_reviews, masukkin ke notification_collection
 def add_review_array(admin_id, business_id):
     
     app.logger.info("inside add review array")
@@ -164,11 +155,8 @@ def add_review_array(admin_id, business_id):
 
     last_n_reviews = admin_collection.find_one({"business_id": business_id})['last_n_reviews']
     app.logger.info(last_n_reviews)
-    # last_n_reviews = last_n_reviews["last_n_reviews"]
-    # last_review = review_collection.find({"business_id": business_id}).sort([("date", -1)]).limit(1)
     last_review = review_collection.find({"business_id": business_id}).sort([("date", -1)]).limit(1)[0]
-    # app.logger.info(last_review)
-
+    
     if not notification_collection.find({"old_review_array": {"$size": last_n_reviews}}):
         notification_collection.update_one({'admin_id': admin_id}, {'$push': {'old_review_array': last_review}})
 
@@ -181,25 +169,11 @@ def add_review_array(admin_id, business_id):
 
             notification_collection.update_one({'admin_id': admin_id}, {"$set": {"old_review_array": []}})
             notification_collection.update_one({"admin_id": admin_id}, {"$set": {"old_review_array": new_review_array}})
-            
-
-            # notification_collection.update_one({
-            #     "admin_id": admin_id
-            # }, {
-            #     "$set": {
-            #         "new_review_array":[
-            #             last_review
-            #     ]
-            #     }
-            # })
 
             notification_collection.update_one({'admin_id': admin_id}, {"$set": {"new_review_array": []}})
             notification_collection.update_one({'admin_id': admin_id}, {'$push': {'new_review_array': last_review}})
 
             notification_collection.update_one({'admin_id': admin_id}, {"$set": {"executed": "0"}})
-
-
-    ####################################
 
 
 @app.route('/check_admin', methods=['POST'])
@@ -209,7 +183,6 @@ def check_admin():
     find_admin = admin_collection.find_one({"admin_username": str(username), "admin_password": str(password)})
     app.logger.info('--- Debug Input ---')
     app.logger.info('username: ', username)
-    # app.logger.info('password: ', password)
     
     if not find_admin:
         error_message = "Incorrect Username or Password. Please enter the correct username and password."
@@ -232,139 +205,7 @@ def send_mail():
     message = Message(subject="Hello", recipients=[email], sender=app.config['MAIL_USERNAME'], body="This is a test email I sent with Gmail and Python!")
     mail.send(message= message)
     return render_template('page.html', result_message='Email sent!')
-##########################################################################################
-# scheduler = BackgroundScheduler()
 
-
-# def job():
-#     print("Scheduled job executed")
-
-# scheduler.add_job(job, 'interval', seconds=1)
-
-# # @app.before_first_request
-# # def start_scheduler():
-# #     scheduler.start()
-
-# # @app.teardown_appcontext
-# # def stop_scheduler(exception=None):
-# #     scheduler.shutdown()
-# scheduler.start()
-
-
-##########################################################################################
-
-
-# def send_email(admin_username, email_body):
-#     receiver_email = admin_collection.find_one({"admin_username": admin_username})['admin_email']
-#     msg = Message(subject="Negative Reviews Notification", recipients=[receiver_email], sender=app.config['MAIL_USERNAME'], body=email_body)
-#     app.logger.info('--- Send email executed ---')
-#     with app.app_context():
-#         mail.send(message=msg)
-#         app.logger.info('--- Email sent! ---')
-
-# def notify_low_rating_reviews(admin_username):
-#     previous_review_ids = set() 
-#     app.logger.info('--- Notify low rating reviews executed ---')
-#     business_id = admin_collection.find_one({"admin_username": admin_username})['business_id']
-#     business_name = business_collection.find_one({"business_id": business_id})['name']
-#     last_n_reviews = admin_collection.find_one({"admin_username": admin_username})['last_n_reviews']
-#     threshold_percentage = admin_collection.find_one({"admin_username": admin_username})['threshold_percentage']
-    
-#     current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-#     # Find the last 'n' reviews for the given business_id based on the "date" field
-#     recent_reviews = list(review_collection.find(
-#         {"business_id": business_id}
-#     ).sort([("date", -1)]).limit(last_n_reviews))
-
-#     print("Recent reviews:")
-#     for review in recent_reviews:
-#         print(f"Review: {review['_id']} - Stars: {review['stars']} - Date: {review['date']}")
-    
-#     app.logger.info('--- Recent reviews executed ---')
-
-#     # Get the set of current review IDs
-#     current_review_ids = {review['_id'] for review in recent_reviews}
-
-#     # Check if there are new reviews by comparing review IDs
-#     new_reviews = current_review_ids - previous_review_ids
-
-#     # Update previous_review_ids with the current review IDs
-#     previous_review_ids.update(current_review_ids)
-
-#     if new_reviews:
-#         low_rating_count = sum(1 for review in recent_reviews if review['stars'] in [1, 2])
-#         total_reviews = len(recent_reviews)
-#         percentage = (low_rating_count / total_reviews) * 100 if total_reviews > 0 else 0
-#         print(f"Percentage of low rating reviews: {percentage:.2f}%")
-
-#         # Notify if the threshold percentage is exceeded
-#         if percentage >= threshold_percentage:
-#             app.logger.info("Threshold exceeded! Sending email notification...")
-
-#             # Send email notification
-#             email_body = f"Dear {business_name} Admin,\n\nYour business has received {percentage:.2f}% negative reviews of the last {last_n_reviews} reviews.\n\nChecked on {current_date}\n\nSincerely,\nYelp Review System."
-#             send_email(admin_username, email_body)
-#             app.logger.info("Email notification sent!")
-
-#             print(f"Checked on {current_date}. Threshold exceeded: {percentage:.2f}% of the last {last_n_reviews} reviews for '{business_name}' have low ratings.")
-#             return render_template('page.html', notification_message='Email notification sent!')
-#         else:
-#             app.logger.info("Threshold not exceeded. No email notification sent.")
-#             return render_template('page.html', notification_message='No email notification sent.')
-#     else:
-#         app.logger.info("No new reviews found. No email notification sent.")
-#         return 'No new reviews found. No email notification sent.'
-
-# executor = ThreadPoolExecutor(max_workers=5)  # Adjust the number of workers as needed
-
-# def perform_review_check(username):
-#     app.logger.info('--- Perform review executed ---')
-#     result = notify_low_rating_reviews(username)
-#     if result:
-#         print(result)
-
-# def initiate_review_check(username):
-#     app.logger.info('--- Initiate review executed ---')
-#     return executor.submit(perform_review_check, username)
-
-# @atexit.register
-# def shutdown():
-#     executor.shutdown(wait=False)
-
-# # @scheduler.task('interval', id='check_reviews', seconds=10)
-# @app.route('/check_reviews', methods=['POST'])
-# def check_reviews():
-#     print("Checking for new low-rated reviews...")
-#     if "Start" in request.form:
-#         with app.app_context():
-#             try:
-#                 admin_username = str(request.form['admin_username'])
-#                 admin_password = str(request.form['admin_password'])
-#                 find_admin = admin_collection.find_one({"admin_username": str(admin_username)}, {"admin_password": str(admin_password)})
-#                 app.logger.info('--- username : ---', admin_username, '--- password : ---', admin_password)
-                
-#                 if not find_admin:
-#                     app.logger.info("find admin not executed")
-#                     error_message = "Incorrect Username or Password. Please enter the correct username and password."
-#                     return render_template('page.html', error_message=error_message)
-                
-#                 else:
-#                     initiate_review_check(admin_username)
-#                     app.logger.info("find admin executed")
-#                     return render_template('page.html', notification_message='Review checking started!')
-                    
-#             except ValueError as err:
-#                 error_message = str(err)  
-#                 return render_template('page.html', error_message=error_message)
-            
-#     elif "Stop" in request.form:
-#         return render_template('page.html', notification_message='Review checking stopped!')
-        
-# # scheduler.add_job(func=check_reviews, trigger='interval', seconds=10)
-# # scheduler.start()
-        
-##########################################################################################
 def get_admin_id(admin_username):
     admin_id = admin_collection.find_one({"admin_username": admin_username})['admin_id']
     return admin_id
@@ -397,7 +238,6 @@ def start_stop_notification():
             return render_template('page.html', notification_message='Review checking stopped!')
         
 
-# @app.route('/input_admin', methods=['POST'])
 def input_admin(admin_username, admin_password, status):
     admin_id = get_admin_id(admin_username)
     app.logger.info('--- username : ---', admin_username, '--- password : ---', admin_password)
@@ -419,14 +259,10 @@ def input_admin(admin_username, admin_password, status):
             notification_collection.insert_one(notif_doc)
             app.logger.info("admin not exist executed, admin added to notification collection")
 
-            # return automatic_check_reviews()
         else:
             app.logger.info('--- admin_id_exist : ---', admin_id_exist(admin_username))
             notification_collection.update_one({"admin_id": admin_collection.find_one({"admin_username": admin_username})['admin_id']}, {"$set": {"status": status}})
             app.logger.info("admin exist executed, admin updated in notification collection")
-
-            # return automatic_check_reviews()
-
     
     except ValueError as err:
         error_message = str(err)  
@@ -440,20 +276,6 @@ def automatic_check_reviews():
         check_review_array(admin_collection.find_one({"admin_id": x['admin_id']}))
 
 
-    # for i in notification_collection.find():
-    #     app.logger.info('--- Notification collection loop executed ---')
-    #     app.logger.info(i)
-    #     app.logger.info(i['status'])
-    #     if i['status'] == '1':
-    #         print("Checking for new low-rated reviews...")
-    #         with app.app_context():
-    #             app.logger.info(i['admin_id'] + " is the admin in the loop")
-    #             # initiate_review_check(i['admin_id']) --- finish later
-    #             return i['admin_id'] + " is the admin in the loop"
-                
-    #     elif i['status'] == '0':
-    #         return "Notification is off, not checking for new low-rated reviews."
-
 scheduler = BackgroundScheduler()        
 
 scheduler.add_job(
@@ -465,10 +287,8 @@ atexit.register(lambda: scheduler.shutdown())
     
 def check_review_array(admin_id):
     app.logger.info("check_review_array started")
-    # app.logger.info(notification_collection.find_one({"admin_id": admin_id}))
 
     admin_id = admin_id["admin_id"]
-    # app.logger.info(admin_id)
 
     new_review_array = notification_collection.find_one({"admin_id": admin_id})["new_review_array"]
     old_review_array = notification_collection.find_one({"admin_id": admin_id})["old_review_array"]
@@ -480,14 +300,12 @@ def check_review_array(admin_id):
         {"business_id": business_id}
     ).sort([("date", -1)]).limit(last_n_reviews))
 
-    # app.logger.info(old_review_array)
     app.logger.info(admin_username)
     app.logger.info(new_review_array)
     
 
     if old_review_array == []:
         if new_review_array != []:
-            # old_review_array jadi new array
             notification_collection.update_one({
                 "admin_id": admin_id
             }, {
@@ -512,7 +330,6 @@ def check_review_array(admin_id):
                 "admin_id": admin_id}, {"$set": {"executed": "0"}})
             
         else:
-            # old_review_array jadi recent_reviews
             notification_collection.update_one({
                 "admin_id": admin_id
             }, {
@@ -533,7 +350,7 @@ def check_review_array(admin_id):
         else:
             return app.logger.info('No new reviews. Skip notification.')
 
-executor = ThreadPoolExecutor(max_workers=5)  # Adjust the number of workers as needed
+executor = ThreadPoolExecutor(max_workers=5)  
 
 def initiate_review_check(username):
     app.logger.info('--- Initiate review executed ---')
@@ -570,8 +387,6 @@ def notify_low_rating_reviews(admin_username, recent_reviews):
         app.logger.info(business_name, "threshold not exceeded")
         return 'No email notification sent.'
 
-######################
-
 def send_email(admin_username, email_body):
     receiver_email = admin_collection.find_one({"admin_username": admin_username})['admin_email']
     msg = Message(subject="Negative Reviews Notification", recipients=[receiver_email], sender=app.config['MAIL_USERNAME'], body=email_body)
@@ -580,9 +395,6 @@ def send_email(admin_username, email_body):
         mail.send(message=msg)
         app.logger.info('--- Email sent! ---')
 
-
-
-##########################
 @app.route('/show_reports', methods=['POST'])        
 def show_reports():
     admin_username = str(request.form['report_admin_username'])
@@ -600,8 +412,6 @@ def show_reports():
         return render_template('page.html', error_message=error_message)
     else:
         months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-        # year = datetime.date.today().year
-        # years = [year - i for i in range(10)]
         month_index = months.index(selected_month) + 1
 
         if month_index < 10:
@@ -627,36 +437,6 @@ def show_reports():
             return render_template('page.html', notification_message=notification_message)
         else:      
             return render_template('table.html', reports=recent_reviews)
-            # return render_template('page.html', years = years)
-
-
-# @app.route('/monthly_report', methods=['POST'])        
-# def monthly_report(business_id): 
-#         selected_month = request.form.get('month', None)
-#         selected_year = int(request.form.get('year', None))
-#         months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-
-#         month_index = months.index(selected_month) + 1
-
-#         if month_index < 10:
-#             start_date = str(str(selected_year) + "-0" + str(month_index) + "-01")
-#             if month_index != 9:
-#                 end_date = str(str(selected_year) + "-0" + str(month_index + 1) + "-01")
-#             else:
-#                 end_date = str(str(selected_year) + "-10-01")
-#         else:
-#             start_date = str(str(selected_year) + "-" + str(month_index) + "-01")
-#             if month_index != 12:
-#                 end_date = str(str(selected_year) + "-" + str(month_index+1) + "-01")
-#             else:
-#                 end_date = str(str(selected_year+1) + "-01-01")
-
-        
-#         recent_reviews = list(review_collection.find(
-#             {"business_id": business_id, "date": {"$gte": start_date, "$lt": end_date}}
-#         ).sort([("date", -1)]))
-
-#         return render_template('table.html', reports=recent_reviews)
 
 if __name__ == '__main__':
     app.run(use_reloader=False, debug=True)
