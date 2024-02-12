@@ -95,15 +95,6 @@
         <input type="submit" value="Get Admin">
     </form>
 
-    <form action="/send_mail", method="post">
-        <h2>Send Mail</h2>
-        <label for ="recipient" >Recipient:</label>
-        <input type="text" id="recipient" name="recipient"><br><br>
-
-        <input type="submit" value="Send Mail">
-        <p>{{ result_message }}</p>
-    </form>
-
     <form action="/start_stop_notification", method="post">
         <h2>Get Notification</h2>
         <label for="admin_username">User Name:</label>

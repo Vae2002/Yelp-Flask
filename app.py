@@ -1,3 +1,5 @@
+# import libraries
+
 from flask import *
 from pymongo import MongoClient
 from datetime import datetime
@@ -10,6 +12,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 
+# connect to mongodb database and collections
 client = MongoClient("mongodb://localhost:27017/")
 db = client['yelp']
 review_collection = db['review']
@@ -23,6 +26,7 @@ def index():
     return render_template('page.html')
 
 ############################################################################################
+# INSERT NEW ADMIN TO ADMIN COLLECTION
 @app.route('/add_admin', methods=['POST'])
 def add_admin():
     app.logger.info(request.form)
@@ -79,6 +83,7 @@ def username_exist(username):
     return existing_admin is not None
 
 ############################################################################################
+# ADD NEW REVIEW TO REVIEW COLLECTION
 @app.route('/add_review', methods=['POST'])
 def add_review():
     if request.method == 'POST':
@@ -172,6 +177,7 @@ def add_review_array(admin_id, business_id):
             notification_collection.update_one({'admin_id': admin_id}, {"$set": {"executed": "0"}})
     
 ############################################################################################
+# CHECK WHETHER THE ADMIN IS FOUND IN ADMIN COLLECTION
 @app.route('/check_admin', methods=['POST'])
 def check_admin():
     username = str(request.form['input_username'])
@@ -187,6 +193,8 @@ def check_admin():
         return username + password + " found"
     
 ############################################################################################
+# START OR STOP REVIEW CHECK FOR CERTAIN ADMIN
+
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = 'eunicelimuria@gmail.com'  
@@ -195,14 +203,6 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
 
-@app.route('/send_mail', methods=['POST'])
-def send_mail():
-    email = request.form['recipient']
-    message = Message(subject="Hello", recipients=[email], sender=app.config['MAIL_USERNAME'], body="This is a test email I sent with Gmail and Python!")
-    mail.send(message= message)
-    return render_template('page.html', result_message='Email sent!')
-
-############################################################################################
 @app.route('/start_stop_notification', methods=['POST'])
 def start_stop_notification():
     admin_username = str(request.form['admin_username'])
@@ -265,6 +265,8 @@ def input_admin(admin_username, admin_password, status):
         return error_message
     
 ############################################################################################
+# SCHEDULER FOR EXECUTING AUTOMATIC REVIEW CHECK
+    
 def automatic_check_reviews():
     app.logger.info('--- Automatic check reviews executed ---')
     for x in notification_collection.find({"status": '1'}):
@@ -392,6 +394,7 @@ scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
 ############################################################################################
+# SHOW REPORTS FOR GIVEN MONTH AND YEAR
 @app.route('/show_reports', methods=['POST'])        
 def show_reports():
     admin_username = str(request.form['report_admin_username'])
@@ -434,6 +437,8 @@ def show_reports():
             return render_template('page.html', notification_message=notification_message)
         else:      
             return render_template('table.html', reports=recent_reviews)
-
+        
+############################################################################################
+# END
 if __name__ == '__main__':
     app.run(use_reloader=False, debug=True)
