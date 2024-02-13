@@ -463,8 +463,8 @@ def show_reports():
 
     if not find_admin:
         app.logger.info("admin not found")
-        error_message = "Please enter the correct username and password."
-        return render_template('page.html', error_message=error_message)
+        error_message_admin = "Please enter the correct username and password."
+        return render_template('page.html', error_message_admin=error_message_admin)
     else:
         months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
         month_index = months.index(selected_month) + 1
@@ -488,8 +488,8 @@ def show_reports():
         ).sort([("date", -1)]))
 
         if recent_reviews == []:
-            notification_message = "No reviews in selected month."
-            return render_template('page.html', notification_message=notification_message)
+            no_review_message = "No reviews in selected month."
+            return render_template('page.html', no_review_message=no_review_message)
         else:      
             return render_template('table.html', reports=recent_reviews)
         

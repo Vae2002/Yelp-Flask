@@ -107,6 +107,12 @@
         <input type="submit" value="Stop Notification", name="Stop">
     </form>
 
+    {% if error_message %}
+        <p>Error: {{ error_message }}</p>
+    {% else %}
+        <p>{{ notification_message }}</p>
+    {% endif %}
+
     <form action = "/show_reports", method="post">
         <h2>Get Monthly Reports</h2>
         <label for="report_admin_username">User Name:</label>
@@ -148,11 +154,10 @@
         <input type="submit" value="Get Reports">
     </form>
 
-
-    {% if error_message %}
-        <p>Error: {{ error_message }}</p>
+    {% if error_message_admin %}
+        <p>Error: {{ error_message_admin }}</p>
     {% else %}
-        <p>{{ notification_message }}</p>
+        <p>{{ no_review_message }}</p>
     {% endif %}
 
     <script>
