@@ -213,7 +213,7 @@ def add_review_array(admin_id, business_id):
                 notification_collection.update_one({'admin_id': admin_id}, {'$push': {'old_review_array': last_review}})
                 notification_collection.update_one({'admin_id': admin_id}, {"$set": {"new_review_array": []}})
                 notification_collection.update_one({'admin_id': admin_id}, {"$set": {"executed": "0"}})
-                
+
                 if old_review_array_length > last_n_reviews:
                     app.logger.info(old_review_array_length)
                     for i in recent_reviews:
@@ -232,15 +232,20 @@ def add_review_array(admin_id, business_id):
 def check_admin():
     username = str(request.form['input_username'])
     password = request.form['input_password']
+    find_username = admin_collection.find_one({"admin_username": str(username)})
     find_admin = admin_collection.find_one({"admin_username": str(username), "admin_password": str(password)})
     app.logger.info('--- Debug Input ---')
     app.logger.info('username: ', username)
     
-    if not find_admin:
-        error_message = "Incorrect Username or Password. Please enter the correct username and password."
+    if not find_username:
+        error_message = "Username not available. Please add new admin."
         return error_message
     else:
-        return username + password + " found"
+        if not find_admin:
+            error_message = "Incorrect Username or Password. Please enter the correct username and password."
+            return error_message
+        else:
+            return username + password + " found"
     
 ############################################################################################
 # START OR STOP REVIEW CHECK FOR CERTAIN ADMIN
