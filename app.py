@@ -1,4 +1,4 @@
-# import libraries
+# IMPORT LIBRARIES
 
 from flask import *
 from pymongo import MongoClient
@@ -12,7 +12,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 
-# connect to mongodb database and collections
+# CONNECT TO MONGODB USING DOCKER FOR THE DATABASE AND COLLECTIONS
 client = MongoClient("mongodb://localhost:27017/")
 db = client['yelp']
 review_collection = db['review']
@@ -21,6 +21,7 @@ business_collection = db['business']
 admin_collection = db['admin']
 notification_collection = db['notification_status']
 
+# ROUTING TO HTML USING FLASK
 @app.route('/')
 def index():
     return render_template('page.html')
@@ -157,25 +158,74 @@ def add_review_array(admin_id, business_id):
     last_n_reviews = admin_collection.find_one({"business_id": business_id})['last_n_reviews']
     app.logger.info(last_n_reviews)
     last_review = review_collection.find({"business_id": business_id}).sort([("date", -1)]).limit(1)[0]
+    new_review_array = notification_collection.find_one({"admin_id": admin_id})['new_review_array']
     
-    if not notification_collection.find({"old_review_array": {"$size": last_n_reviews}}):
-        notification_collection.update_one({'admin_id': admin_id}, {'$push': {'old_review_array': last_review}})
+    old_review_array_length = len(list(notification_collection.find_one({"admin_id": admin_id})["old_review_array"]))
+    new_review_array_length = len(list(notification_collection.find_one({"admin_id": admin_id})["new_review_array"]))
 
-        
-    else:
-        if not notification_collection.find({"new_review_array": {"$size": last_n_reviews}}):
-            notification_collection.update_one({'admin_id': admin_id}, {'$push': {'new_review_array': last_review}})
+    recent_reviews = review_collection.find(
+        {"business_id": business_id}
+    ).sort([("date", -1)]).limit(last_n_reviews)
+
+    if old_review_array_length == 0:
+        app.logger.info("Old review array is empty")
+        if new_review_array_length == 0:
+            app.logger.info("New review array is empty")
+            for i in recent_reviews:
+                notification_collection.update_one({
+                    "admin_id": admin_id
+                }, {
+                    "$push": {
+                        "old_review_array": i
+                    }
+                })
+                
+
         else:
-            new_review_array = notification_collection.find_one({"admin_id": admin_id})['new_review_array']
-
-            notification_collection.update_one({'admin_id': admin_id}, {"$set": {"old_review_array": []}})
-            notification_collection.update_one({"admin_id": admin_id}, {"$set": {"old_review_array": new_review_array}})
-
+            app.logger.info("But new review array is not empty")
+            notification_collection.update_one({"admin_id": admin_id}, {"$push": {"old_review_array": new_review_array}})
+            notification_collection.update_one({'admin_id': admin_id}, {'$push': {'old_review_array': last_review}})
             notification_collection.update_one({'admin_id': admin_id}, {"$set": {"new_review_array": []}})
-            notification_collection.update_one({'admin_id': admin_id}, {'$push': {'new_review_array': last_review}})
+    else:
+        app.logger.info("Old review array isn't empty")
+        if old_review_array_length == last_n_reviews:
+            app.logger.info(notification_collection.find({"old_review_array": {"$elemMatch": {"admin_id": admin_id}, "$size": last_n_reviews}}))
+            app.logger.info("Old review array is the size of last_n_reviews")
+            if new_review_array_length == last_n_reviews-1:
+                app.logger.info("New review array is the size of last_n_reviews")
+                app.logger.info(last_n_reviews-1)
+                notification_collection.update_one({'admin_id': admin_id}, {"$set": {"old_review_array": []}})
+                notification_collection.update_one({"admin_id": admin_id}, {"$set": {"old_review_array": new_review_array}})
+                notification_collection.update_one({'admin_id': admin_id}, {'$push': {'old_review_array': last_review}})
 
-            notification_collection.update_one({'admin_id': admin_id}, {"$set": {"executed": "0"}})
-    
+                notification_collection.update_one({'admin_id': admin_id}, {"$set": {"new_review_array": []}})
+
+                notification_collection.update_one({'admin_id': admin_id}, {"$set": {"executed": "0"}})
+            else:
+                app.logger.info("New review array isn't the size of last_n_reviews")
+                notification_collection.update_one({'admin_id': admin_id}, {'$push': {'new_review_array': last_review}})
+            
+        else:
+            app.logger.info("Old review array isn't the size of last_n_reviews")
+            if new_review_array_length > 0:
+                app.logger.info("But new review array is not empty")
+                notification_collection.update_one({"admin_id": admin_id}, {"$push": {"old_review_array": new_review_array}})
+                notification_collection.update_one({'admin_id': admin_id}, {'$push': {'old_review_array': last_review}})
+                notification_collection.update_one({'admin_id': admin_id}, {"$set": {"new_review_array": []}})
+                notification_collection.update_one({'admin_id': admin_id}, {"$set": {"executed": "0"}})
+                
+                if old_review_array_length > last_n_reviews:
+                    app.logger.info(old_review_array_length)
+                    for i in recent_reviews:
+                        notification_collection.update_one({
+                            "admin_id": admin_id
+                        }, {
+                            "$push": {
+                                "old_review_array": i
+                            }
+                        })
+            else:
+                notification_collection.update_one({'admin_id': admin_id}, {'$push': {'old_review_array': last_review}})
 ############################################################################################
 # CHECK WHETHER THE ADMIN IS FOUND IN ADMIN COLLECTION
 @app.route('/check_admin', methods=['POST'])
@@ -312,7 +362,7 @@ def check_review_array(admin_id):
                 ]
                 }
             })
-
+    
             notification_collection.update_one({
                 "admin_id": admin_id}, {"$set": {"executed": "0"}})
             
